@@ -1,0 +1,88 @@
+; Autor: Juan Diego Marroquín Escobar - 1689821
+; Ejercicio: Conversor numero entero a cadena de texto
+; Fecha de creación: 22/03/23 
+
+section .data
+    
+    max_digits equ 10   ; Máximo número de dígitos que permito 
+    buffer db max_digits + 1   ; Buffer para almacenar la cadena de caracteres
+    format db "%d", 0   
+
+section .text
+    global _start
+
+    ; Función para convertir un número entero a una cadena de caracteres
+    
+    int_to_str:
+        push esi        ; Guarda los registros que se van a utilizar
+        push edi
+        push ebx
+
+        mov esi, buffer 
+        xor edi, edi    
+        cmp eax, 0      ; Comprueba si el número es negativo
+        jge .check_digit 
+        neg eax         ; Cambia el signo del número
+        mov byte [esi], '-'  ; Almacena el signo negativo en el buffer
+        inc esi         
+        mov edi, 1      
+
+    .check_digit:
+        xor ebx, ebx    
+        mov ecx, 10     
+        div ecx         ; Divide EAX entre 10, el resto se almacena en EDX
+        add bl, '0'     ; Convierte el resto a su valor ASCII
+        mov [esi], bl   
+        inc esi         
+        inc edi         ; Incrementa el contador de dígitos
+        cmp eax, 0      
+        jne .check_digit    
+
+        cmp byte [buffer], '-'   ; Comprueba si el número es negativo
+        je .reverse_buffer      ; Si lo es, salta a invertir el buffer
+
+    .reverse_buffer:
+        mov edi, esi    
+        dec esi         
+        cmp byte [esi], '-'     ; Comprueba si el número es negativo
+        jne .reverse_buffer_loop    ; Si no lo es, salta a invertir el buffer
+
+        mov byte [esi], '-'      ; Almacena el signo negativo al principio del buffer
+        mov byte [edi], 0        ; Establece el último carácter en 0
+        dec edi         
+        inc esi         
+        jmp .reverse_buffer_loop
+
+    .reverse_buffer_loop:
+        cmp esi, edi    
+        jge .done      
+        mov al, [esi]   
+        mov bl, [edi]   
+        mov [esi], bl   
+        mov [edi], al   
+        inc esi         
+        dec edi         
+        jmp .reverse_buffer_loop
+
+    .done:
+        pop ebx     ; Restaura los registros
+        pop edi
+        pop esi
+        ret
+
+    _start:
+        ; Convierte el número 1234 a una cadena de caracteres y lo muestra en pantalla
+        mov eax, 1234
+        push eax
+        push buffer
+        call int_to_str
+        add esp, 8
+        push buffer
+        push dword format
+        call printf
+        add esp, 8
+
+        ; Sale del programa
+        mov eax, 1
+        xor ebx, ebx
+        int 0x80

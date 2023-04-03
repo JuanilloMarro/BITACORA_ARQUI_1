@@ -1,0 +1,38 @@
+; Autor: Juan Diego Marroquín Escobar - 1689821
+; Ejercicio: Petición de datos
+; Fecha de creación: 2/04/23 
+
+section .data
+
+  x db 0
+  y db 0
+
+section .text
+  global _start
+
+; Mueve el cursor a la posición indicada por X e Y
+gotoxy:
+  push bp           ; Guarda el valor anterior de la base del puntero en la pila
+  mov bp, sp        ; Establece la base del puntero
+  mov ah, 02h       ; Función de servicio de vídeo para mover el cursor
+  mov bh, 0         
+  mov dl, byte [bp + 4] ; Columna (valor de X)
+  mov dh, byte [bp + 6] ; Fila (valor de Y)
+  sub dl, 1         
+  sub dh, 1
+  int 10h           
+  pop bp            ; Restaura el valor anterior de la base del puntero
+  ret               
+
+_start:
+  
+  mov byte [x], 10   ; Establece el valor de X en 10
+  mov byte [y], 5    ; Establece el valor de Y en 5
+  push word [y]      ; Pone el valor de Y en la pila
+  push word [x]      ; Pone el valor de X en la pila
+  call gotoxy        
+
+  mov eax, 1         
+  xor ebx, ebx       
+  int 80h       
+
